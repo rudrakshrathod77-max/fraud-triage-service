@@ -1,10 +1,46 @@
 # Fraud Triage Service
 
 ## Overview
-(baad mein likhenge)
+A fraud triage service for a synthetic payments dataset (all data is fictional, amounts in INR).
+Part A cleans the raw export and builds three features; Part B trains a tuned random forest and picks an alert threshold on validation data.
+Part C retrieves the fraud policy that applies to a flagged payment and asks a (mock) language model for a structured case note, checked by three validation gates.
+Part D wraps everything in a FastAPI service with input checks, output guardrails, error handling, one log line per POST request and live metrics.
+The model is trained at start-up and kept in memory; nothing is saved to disk.
+A flagged payment is never auto-approved, and every held payment goes to a human reviewer.
 
 ## Reproduce
-(baad mein likhenge)
+Run everything from the repository root (Python 3.11 or newer, shown for macOS/Linux).
+
+```bash
+git clone https://github.com/rudrakshrathod77-max/fraud-triage-service.git
+cd fraud-triage-service
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python generate_data.py      # prints: rows written: 6090
+python prepare.py            # Part A audit and checkpoints
+python train.py              # Part B tables
+python retrieval.py          # Part C retrieval table
+python casenote.py           # Part C scenario table
+```
+
+Part D needs two terminals. Restart the service before every smoke run, because the mock model remembers call counts per transaction id, and delete service.log first so it holds only that run's ten POST lines.
+
+```bash
+# terminal 1
+rm -f service.log
+uvicorn app:app --port 8000
+
+# terminal 2 (after "Application startup complete")
+python smoke_test.py
+cat service.log
+```
+
+Optional extra check (restart the service first, and delete service.log afterwards):
+
+```bash
+curl -s -X POST http://127.0.0.1:8000/case -H "Content-Type: application/json" -d '{"txn_id": "T900006", "merchant_category": "Grocery", "city": "Pune", "payment_mode": "UPI", "amount_inr": 4500, "hour_of_day": 13, "txn_count_last_24h": 0, "avg_amount_30d_inr": 3000, "distance_from_home_km": 20.0, "is_new_device": 1, "account_age_days": 300, "question": "temporary hold on repeated UPI payments within a day"}'
+```
 
 ## Part A results
 
@@ -121,6 +157,7 @@ The leaky score is not something to be proud of because chargeback_filed is only
 | distance_from_home_km | 0.0708 |
 
 The top two features show that fraudsters spend far more than the customer normally does and fire many payments in a short window before the account is blocked.
+
 ## Part C results
 
 **Retrieval (TF-IDF, default settings, cosine similarity)**
@@ -162,5 +199,56 @@ Totals: 19 model calls; 3 scenarios valid on the first call (S1, S6, S8); 6 reco
 A transaction with no matching policy returns status no_policy_match with attempts 0 and case_note None without calling the model, and a ConnectionError for T900099 propagates out of run_case.
 
 A hosted model samples its words, so the same prompt can come back as broken JSON, a missing key or a wrong value on two calls in a row, and a provider update or heavy load can change its behaviour without warning. Because a fluent answer can still be malformed or wrong (S6 first said approve for a 0.58 fraud score), nothing the model writes can be trusted blindly. That is why every note goes through the three validation gates, a bounded retry, a safe default and the approve-override business rule.
+
 ## Part D results
+
+**Smoke test (fresh service, 11 of 11 PASS: happy 3/3, escalation 4/4, edge 4/4)**
+
+| Id | Category | Expected | Observed | Result |
+|---|---|---|---|---|
+| Q1 | happy | 200 | 200 | PASS |
+| Q2 | happy | 200 | 200 | PASS |
+| Q3 | escalation | 200 | 200 | PASS |
+| Q4 | escalation | 200 | 200 | PASS |
+| Q5 | edge | 400 | 400 | PASS |
+| Q6 | edge | 422 | 422 | PASS |
+| Q7 | escalation | 200 | 200 | PASS |
+| Q8 | escalation | 200 | 200 | PASS |
+| Q9 | edge | 503 | 503 | PASS |
+| Q10 | happy | 200 | 200 | PASS |
+| Q11 | edge | 200 | 200 | PASS |
+
+**GET /metrics after that run**
+
+```json
+{
+  "requests_total": 10,
+  "success_total": 7,
+  "error_total": 3,
+  "success_rate": 0.7,
+  "error_rate": 0.3,
+  "avg_latency_ms": 7.0,
+  "human_review_total": 5,
+  "human_review_rate": 0.5
+}
+```
+
+**Three lines from service.log (one per level)**
+
+```
+2026-10-15 09:11:10,150 INFO endpoint=/score status=200 latency_ms=6.8 txn_id=T800001 fraud_probability=0.0430
+2026-10-15 09:11:10,164 WARNING endpoint=/score status=200 latency_ms=6.1 txn_id=T800003 fraud_probability=0.1813 guardrail_override=true
+2026-10-15 09:11:10,205 ERROR endpoint=/case status=503 latency_ms=20.1 txn_id=T900099 fraud_probability=0.9596
+```
+
+service.log holds exactly the ten POST lines of one smoke run: INFO for Q2, Q3, Q7, Q10, Q11; WARNING for Q4, Q5, Q6, Q8; ERROR for Q9.
+
+**Extra check (fresh service, txn T900006).** The model's first reply says approve, the fraud probability is 0.4391 (flagged, below 0.5), and the service answers 200 with decision hold_for_review, case_note.recommended_action hold_for_review, guardrail_override true and human_review true.
+
 ## Limitations
+
+- The data is synthetic and the fraud rule that generated it is hand-built, so the scores say little about real payment fraud.
+- The threshold of 0.4 was tuned on only 73 validation fraud cases, so it is a noisy estimate and could shift with a different split.
+- The retriever is keyword-based TF-IDF and cannot match meaning, so a paraphrased question with different words can fall below MIN_SCORE or hit the wrong policy.
+- The language model is a scripted mock with fixed defects, so the retry and validation logic was never tested against the variety of a real hosted model.
+- The model is retrained at every start-up (about a minute) and held in memory, so the service restarts slowly and the counters and logs reset with it.

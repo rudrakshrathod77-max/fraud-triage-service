@@ -1,0 +1,62 @@
+[
+  {
+    "txn_id": "T900001",
+    "fraud_probability": 0.96,
+    "amount_inr": 82000,
+    "question": "card payment above INR 50000 from a new device"
+  },
+  {
+    "txn_id": "T900002",
+    "fraud_probability": 0.71,
+    "amount_inr": 6400,
+    "question": "more than 6 UPI payments in 24 hours velocity alert"
+  },
+  {
+    "txn_id": "T900003",
+    "fraud_probability": 0.88,
+    "amount_inr": 15500,
+    "question": "payment at 3 AM far away from the home city"
+  },
+  {
+    "txn_id": "T900004",
+    "fraud_probability": 0.64,
+    "amount_inr": 3200,
+    "question": "customer reports unauthorised payment and chargeback case"
+  },
+  {
+    "txn_id": "T900005",
+    "fraud_probability": 0.91,
+    "amount_inr": 41000,
+    "question": "electronics merchant payment on an account younger than 30 days"
+  },
+  {
+    "txn_id": "T900006",
+    "fraud_probability": 0.58,
+    "amount_inr": 9800,
+    "question": "temporary hold on repeated UPI payments within a day"
+  },
+  {
+    "txn_id": "T900007",
+    "fraud_probability": 0.77,
+    "amount_inr": 22000,
+    "question": "card payment above INR 50000 from a new device"
+  },
+  {
+    "txn_id": "T900008",
+    "fraud_probability": 0.93,
+    "amount_inr": 120000,
+    "question": "what happens after a customer reports an unauthorised payment"
+  },
+  {
+    "txn_id": "T900009",
+    "fraud_probability": 0.69,
+    "amount_inr": 7300,
+    "question": "payment at 3 AM far away from the home city"
+  },
+  {
+    "txn_id": "T900010",
+    "fraud_probability": 0.84,
+    "amount_inr": 56000,
+    "question": "how many UPI payments in 24 hours trigger a velocity alert"
+  }
+]

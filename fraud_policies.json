@@ -1,0 +1,32 @@
+[
+  {
+    "policy_id": "P1",
+    "title": "High-value card payment review",
+    "text": "A card payment above INR 50000 from a device first seen within the last 7 days must be held for review by the card risk team before settlement."
+  },
+  {
+    "policy_id": "P2",
+    "title": "UPI velocity limits",
+    "text": "More than 6 UPI payments from one customer within 24 hours triggers a velocity alert. The UPI risk team places a temporary hold and contacts the customer to confirm the activity."
+  },
+  {
+    "policy_id": "P3",
+    "title": "Night-time and distance anomalies",
+    "text": "A payment made between midnight and 5 AM more than 100 km away from the customer home city is flagged. The customer care team calls the customer to verify before the payment is released."
+  },
+  {
+    "policy_id": "P4",
+    "title": "Refund and chargeback handling",
+    "text": "When a customer reports an unauthorised payment, the merchant operations team opens a chargeback case, blocks further payments on the instrument and sends a notification to the customer."
+  },
+  {
+    "policy_id": "P5",
+    "title": "Electronics merchant watchlist",
+    "text": "Electronics merchants receive extra monitoring. A payment above INR 30000 on a new account younger than 30 days is held for review by the merchant operations team."
+  },
+  {
+    "policy_id": "P6",
+    "title": "Low-risk auto-approval",
+    "text": "Payments with a fraud score below the approved threshold on an established account are approved automatically and need no manual review."
+  }
+]

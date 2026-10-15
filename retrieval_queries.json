@@ -1,0 +1,42 @@
+[
+  {
+    "query": "card payment above INR 50000 from a new device",
+    "expected_policy": "P1"
+  },
+  {
+    "query": "how many UPI payments in 24 hours trigger a velocity alert",
+    "expected_policy": "P2"
+  },
+  {
+    "query": "payment at 3 AM far away from the home city",
+    "expected_policy": "P3"
+  },
+  {
+    "query": "customer reports unauthorised payment and chargeback case",
+    "expected_policy": "P4"
+  },
+  {
+    "query": "electronics merchant payment on an account younger than 30 days",
+    "expected_policy": "P5"
+  },
+  {
+    "query": "which payments are approved automatically without manual review",
+    "expected_policy": "P6"
+  },
+  {
+    "query": "temporary hold on repeated UPI payments within a day",
+    "expected_policy": "P2"
+  },
+  {
+    "query": "what happens after a customer reports an unauthorised payment",
+    "expected_policy": "P4"
+  },
+  {
+    "query": "what is the cafeteria menu today",
+    "expected_policy": null
+  },
+  {
+    "query": "how do I reset my email password",
+    "expected_policy": null
+  }
+]
